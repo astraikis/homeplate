@@ -8,7 +8,7 @@
     --red-tint: rgb(236, 112, 99, 0.4);
 }
 
-p, h3 {
+p, h1, h3 {
     margin: 0;
 }
 
@@ -20,16 +20,25 @@ p, h3 {
     display: none !important;
 }
 
+.grey {
+    color: var(--dark-grey);
+}
+
+header {
+    padding: 1rem 0;
+}
+
 body {
     font-family: Arial, Helvetica, sans-serif;
     color: var(--black);
     background-color: var(--white);
+    padding: 0 1rem;
 }
 
 #games-grid {
     /* border: 4px solid var(--grey);
     border-radius: 5px; */
-    padding: 1rem;
+    padding: 1rem 0;
     display: flex;
     flex-wrap: wrap;
     column-gap: 10px;
@@ -40,8 +49,6 @@ body {
     border: 5px solid var(--grey);
     border-radius: 4px;
     background-color: var(--grey);
-    /* padding: 0.5rem; */
-    cursor: pointer;
     flex: 45%;
     height: fit-content;
 }
@@ -56,6 +63,7 @@ body {
     flex-direction: column;
     padding: 1rem;
     align-items: center;
+    cursor: pointer;
 }
 
 .game-team h3 {
@@ -83,7 +91,11 @@ body {
 
 .stats-team {
     width: 50%;
-    padding: 0 4rem;
+    padding: 0 3.5rem;
+}
+
+.stats-team h3 {
+    margin: 1rem;
 }
 
 .stat-table {
@@ -96,7 +108,7 @@ body {
 }
 
 .stat-table td {
-    padding: 0.5rem;
+    padding: 0.5rem 1rem;
     border: 2px solid var(--grey);
 }
 

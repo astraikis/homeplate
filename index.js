@@ -141,8 +141,33 @@ function categorizeGames(games) {
     return categories;
 }
 
+function addRow(away, home, statAbbrv, statRequestName, awayStats, homeStats, lower, higher) {
+    const awayRow = document.createElement("tr");
+    awayRow.innerHTML = `<th>${statAbbrv}</th><td class="stat-row">${awayStats[statRequestName]}</td>`;
+    away.appendChild(awayRow);
+
+    const homeRow = document.createElement("tr");
+    homeRow.innerHTML = `<th>${statAbbrv}</th><td class="stat-row">${homeStats[statRequestName]}</td>`;
+    home.appendChild(homeRow);
+
+    if (awayStats[statRequestName] > homeStats[statRequestName]) {
+        awayRow.className = higher;
+        homeRow.className = lower;
+    } else if (awayStats[statRequestName] < homeStats[statRequestName]) {
+        awayRow.className = lower;
+        homeRow.className = higher;
+    }
+}
+
 async function getHitting(teamId) {
     const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/stats?season=2024&stats=season&group=hitting&sportIds=1`);
+    const data = await res.json();
+
+    return data["stats"][0]["splits"][0]["stat"];
+}
+
+async function getPitching(teamId) {
+    const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/stats?season=2024&stats=season&group=pitching&sportIds=1`);
     const data = await res.json();
 
     return data["stats"][0]["splits"][0]["stat"];
@@ -169,7 +194,7 @@ async function addGame(game) {
     awayLogo.src = teamLogos[away["team"]["name"]];
     awayDiv.appendChild(awayLogo);
 
-    const awayName = document.createElement("h3")
+    const awayName = document.createElement("h2")
     awayName.innerText = away["team"]["name"];
     awayDiv.appendChild(awayName);
 
@@ -180,7 +205,7 @@ async function addGame(game) {
 
     teamDiv.appendChild(awayDiv);
 
-    // At
+    // @
     const atDiv = document.createElement("div");
     atDiv.className = "at-div";
     atDiv.innerText = "@";
@@ -195,7 +220,7 @@ async function addGame(game) {
     homeLogo.src = teamLogos[home["team"]["name"]];
     homeDiv.appendChild(homeLogo);
 
-    const homeName = document.createElement("h3")
+    const homeName = document.createElement("h2")
     homeName.innerText = home["team"]["name"];
     homeDiv.appendChild(homeName);
     
@@ -220,110 +245,67 @@ async function addGame(game) {
     homeStats.className = "stats-team"
     stats.appendChild(homeStats);
 
-    const awayHittingLabel = document.createElement("h4");
+    // Hitting
+    const awayHittingLabel = document.createElement("h3");
     awayHittingLabel.innerText = "Hitting";
     awayStats.appendChild(awayHittingLabel);
     
-    const homeHittingLabel = document.createElement("h4");
+    const homeHittingLabel = document.createElement("h3");
     homeHittingLabel.innerText = "Hitting";
     homeStats.appendChild(homeHittingLabel);
 
     const awayHitting = await getHitting(away["team"]["id"]);
     const homeHitting = await getHitting(home["team"]["id"]);
 
-    // Away hitting table
     const awayHittingTable = document.createElement("table");
-    awayHittingTable.className = "stat-table"
+    awayHittingTable.className = "stat-table";
+    const homeHittingTable = document.createElement("table");
+    homeHittingTable.className = "stat-table";
 
-    const awayAVGRow = document.createElement("tr");
-    awayAVGRow.innerHTML = `<th>AVG</th><td class="stat-row">${awayHitting["avg"]}</td>`;
-    awayHittingTable.appendChild(awayAVGRow);
-
-    const awayOBPRow = document.createElement("tr");
-    awayOBPRow.innerHTML = `<th>OBP</th><td class="stat-row">${awayHitting["obp"]}</td>`;
-    awayHittingTable.appendChild(awayOBPRow);
-
-    const awaySLGRow = document.createElement("tr");
-    awaySLGRow.innerHTML = `<th>SLG</th><td class="stat-row">${awayHitting["slg"]}</td>`;
-    awayHittingTable.appendChild(awaySLGRow);
-
-    const awayHRow = document.createElement("tr");
-    awayHRow.innerHTML = `<th>H</th><td class="stat-row">${awayHitting["hits"]}</td>`;
-    awayHittingTable.appendChild(awayHRow);
-
-    const awayHRRow = document.createElement("tr");
-    awayHRRow.innerHTML = `<th>HR</th><td class="stat-row">${awayHitting["homeRuns"]}</td>`;
-    awayHittingTable.appendChild(awayHRRow);
+    addRow(awayHittingTable, homeHittingTable, "AVG", "avg", awayHitting, homeHitting, "worse", "better");
+    addRow(awayHittingTable, homeHittingTable, "OBP", "obp", awayHitting, homeHitting, "worse", "better");
+    addRow(awayHittingTable, homeHittingTable, "SLG", "slg", awayHitting, homeHitting, "worse", "better");
+    addRow(awayHittingTable, homeHittingTable, "OPS", "ops", awayHitting, homeHitting, "worse", "better");
+    addRow(awayHittingTable, homeHittingTable, "R", "runs", awayHitting, homeHitting, "worse", "better");
+    addRow(awayHittingTable, homeHittingTable, "HR", "homeRuns", awayHitting, homeHitting, "worse", "better");
+    addRow(awayHittingTable, homeHittingTable, "BB", "baseOnBalls", awayHitting, homeHitting, "worse", "better");
+    addRow(awayHittingTable, homeHittingTable, "RBI", "rbi", awayHitting, homeHitting, "worse", "better");
 
     awayStats.appendChild(awayHittingTable);
-
-    // Home hitting table
-    const homeHittingTable = document.createElement("table");
-    homeHittingTable.className = "stat-table"
-
-    const homeAVGRow = document.createElement("tr");
-    homeAVGRow.innerHTML = `<th>AVG</th><td class="stat-row">${homeHitting["avg"]}</td>`;
-    homeHittingTable.appendChild(homeAVGRow);
-
-    const homeOBPRow = document.createElement("tr");
-    homeOBPRow.innerHTML = `<th>OBP</th><td class="stat-row">${homeHitting["obp"]}</td>`;
-    homeHittingTable.appendChild(homeOBPRow);
-
-    const homeSLGRow = document.createElement("tr");
-    homeSLGRow.innerHTML = `<th>SLG</th><td class="stat-row">${homeHitting["slg"]}</td>`;
-    homeHittingTable.appendChild(homeSLGRow);
-
-    const homeHRow = document.createElement("tr");
-    homeHRow.innerHTML = `<th>H</th><td class="stat-row">${homeHitting["hits"]}</td>`;
-    homeHittingTable.appendChild(homeHRow);
-
-    const homeHRRow = document.createElement("tr");
-    homeHRRow.innerHTML = `<th>HR</th><td class="stat-row">${homeHitting["homeRuns"]}</td>`;
-    homeHittingTable.appendChild(homeHRRow);
-
     homeStats.appendChild(homeHittingTable);
 
-    // Better/worse
-    if (awayHitting["avg"] > homeHitting["avg"]) {
-        awayAVGRow.className = "better";
-        homeAVGRow.className = "worse";
-    } else if (awayHitting["avg"] < homeHitting["avg"]) {
-        awayAVGRow.className = "worse";
-        homeAVGRow.className = "better";
-    }
+    // Pitching
+    const awayPitchingLabel = document.createElement("h3");
+    awayPitchingLabel.innerText = "Pitching";
+    awayStats.appendChild(awayPitchingLabel);
 
-    if (awayHitting["obp"] > homeHitting["obp"]) {
-        awayOBPRow.className = "better";
-        homeOBPRow.className = "worse";
-    } else if (awayHitting["obp"] < homeHitting["obp"]) {
-        awayOBPRow.className = "worse";
-        homeOBPRow.className = "better";
-    }
+    const homePitchingLabel = document.createElement("h3");
+    homePitchingLabel.innerText = "Pitching";
+    homeStats.appendChild(homePitchingLabel);
 
-    if (awayHitting["slg"] > homeHitting["slg"]) {
-        awaySLGRow.className = "better";
-        homeSLGRow.className = "worse";
-    } else if (awayHitting["slg"] < homeHitting["slg"]) {
-        awaySLGRow.className = "worse";
-        homeSLGRow.className = "better";
-    }
+    const awayPitching = await getPitching(away["team"]["id"]);
+    const homePitching = await getPitching(home["team"]["id"]);
 
-    if (awayHitting["hits"] > homeHitting["hits"]) {
-        awayHRow.className = "better";
-        homeHRow.className = "worse";
-    } else if (awayHitting["hits"] < homeHitting["hits"]) {
-        awayHRow.className = "worse";
-        homeHRow.className = "better";
-    }
+    const awayPitchingTable = document.createElement("table");
+    awayPitchingTable.className = "stat-table";
+    const homePitchingTable = document.createElement("table");
+    homePitchingTable.className = "stat-table";
 
-    if (awayHitting["homeRuns"] > homeHitting["homeRuns"]) {
-        awayHRRow.className = "better";
-        homeHRRow.className = "worse";
-    } else if (awayHitting["homeRuns"] < homeHitting["homeRuns"]) {
-        awayHRRow.className = "worse";
-        homeHRRow.className = "better";
-    }
-    
+    addRow(awayPitchingTable, homePitchingTable, "AVG", "avg", awayPitching, homePitching, "better", "worse");
+    addRow(awayPitchingTable, homePitchingTable, "OBP", "obp", awayPitching, homePitching, "better", "worse");
+    addRow(awayPitchingTable, homePitchingTable, "SLG", "slg", awayPitching, homePitching, "better", "worse");
+    addRow(awayPitchingTable, homePitchingTable, "OPS", "ops", awayPitching, homePitching, "better", "worse");
+    addRow(awayPitchingTable, homePitchingTable, "ERA", "era", awayPitching, homePitching, "better", "worse");
+    addRow(awayPitchingTable, homePitchingTable, "R", "runs", awayPitching, homePitching, "better", "worse");
+    addRow(awayPitchingTable, homePitchingTable, "HR", "homeRuns", awayPitching, homePitching, "better", "worse");
+    addRow(awayPitchingTable, homePitchingTable, "AVG", "avg", awayPitching, homePitching, "better", "worse");
+    addRow(awayPitchingTable, homePitchingTable, "O", "outs", awayPitching, homePitching, "worse", "better");
+    addRow(awayPitchingTable, homePitchingTable, "SO", "strikeOuts", awayPitching, homePitching, "worse", "better");
+    addRow(awayPitchingTable, homePitchingTable, "SHO", "shutouts", awayPitching, homePitching, "worse", "better");
+
+    awayStats.appendChild(awayPitchingTable);
+    homeStats.appendChild(homePitchingTable);
+
     gameDiv.appendChild(stats);
 
     teamDiv.addEventListener("click", e => {

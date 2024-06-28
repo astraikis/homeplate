@@ -1,0 +1,4 @@
+click on stat and see a tooltip explaining the stat,
+the forumla, and a rating of how good the instance of
+that stat is. could maybe use the + version of those stats
+because that kind of works like a rating.
