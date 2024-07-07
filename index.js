@@ -1,4 +1,4 @@
-const gamesGrid = document.getElementById("games-grid");
+const gamesDiv = document.getElementById("games");
 
 const divisions = {
     "New York Yankees": "al-e",
@@ -71,6 +71,39 @@ const teamLogos = {
     "Washington Nationals": "https://www.mlbstatic.com/team-logos/team-cap-on-light/141.svg"
 }
 
+const teamAbbrvs = {
+    "Arizona Diamondbacks": "ARI",
+    "Atlanta Braves": "ATL",
+    "Baltimore Orioles": "BAL",
+    "Boston Red Sox": "BOS",
+    "Chicago Cubs": "CHC",
+    "Chicago White Sox": "CHW",
+    "Cincinnati Reds": "CIN",
+    "Cleveland Guardians": "CLE",
+    "Colorado Rockies": "COL",
+    "Detroit Tigers": "DET",
+    "Houston Astros": "HOU",
+    "Kansas City Royals": "KAN",
+    "Los Angeles Angels": "LAA",
+    "Los Angeles Dodgers": "LAD",
+    "Miami Marlins": "MIA",
+    "Milwaukee Brewers": "MIL",
+    "Minnesota Twins": "MIN",
+    "New York Mets": "NYM",
+    "New York Yankees": "NYY",
+    "Oakland Athletics": "OAK",
+    "Philadelphia Phillies": "PHI",
+    "Pittsburgh Pirates": "PIT",
+    "San Diego Padres": "SD",
+    "San Francisco Giants": "SF",
+    "Seattle Mariners": "SEA",
+    "St. Louis Cardinals": "STL",
+    "Tampa Bay Rays": "TB",
+    "Texas Rangers": "TEX",
+    "Toronto Blue Jays": "TOR",
+    "Washington Nationals": "WAS"
+}
+
 const months = 
     ["January", "February", "March", "April", "May", 
     "June", "July", "August", "September", "October", 
@@ -85,7 +118,7 @@ const days =
 function setDate() {
     let date = new Date();
     document.getElementById("date").innerText = 
-        `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDay()}, ${date.getFullYear()}`;
+        `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 }
 
 function categorizeGames(games) {
@@ -141,21 +174,88 @@ function categorizeGames(games) {
     return categories;
 }
 
-function addRow(away, home, statAbbrv, statRequestName, awayStats, homeStats, lower, higher) {
-    const awayRow = document.createElement("tr");
-    awayRow.innerHTML = `<th>${statAbbrv}</th><td class="stat-row">${awayStats[statRequestName]}</td>`;
-    away.appendChild(awayRow);
+function getTooltipHtml(statAbbrv, type) {
+    console.log(statAbbrv);
+    const summaries = {
+        "AVG-h": "Number of hits divided by number of at-bats.",
+        "OBP-h": "Number of hits, walks, and hit-by-pitches divided by plate appearances.",
+        "SLG-h": "Number of bases a hitter records per at-bat.",
+        "OPS-h": "OBP plus SLG. Represents how well a hitter can get on base and hit for power. Gives a good look at their overall hitting.",
+        "AVG-p": "Number of hits divided by number of at-bats.",
+        "OBP-p": "Number of hits, walks, and hit-by-pitches divided by plate appearances.",
+        "SLG-p": "Number of bases a hitter records per at-bat.",
+        "OPS-p": "OBP plus SLG. Represents how well a hitter can get on base and hit for power. Gives a good look at their overall hitting.",
+        "R-h": "Number of runs.",
+        "ERA-p": "Average number of runs allowed per nine innings.",
+        "FPCT-f": "Number of putouts and assists divided by the number of chances to make an out.",
+        "E-f": "A fielder fails to convert an out that an average fielder should be able to."
+    }
 
-    const homeRow = document.createElement("tr");
-    homeRow.innerHTML = `<th>${statAbbrv}</th><td class="stat-row">${homeStats[statRequestName]}</td>`;
-    home.appendChild(homeRow);
+    const better = {
+        "AVG-h": "Higher",
+        "OBP-h": "Higher",
+        "SLG-h": "Higher",
+        "OPS-h": "Higher",
+        "AVG-p": "Lower",
+        "OBP-p": "Lower",
+        "SLG-p": "Lower",
+        "OPS-p": "Lower",
+        "R-h": "Higher",
+        "ERA-p": "Lower",
+        "FPCT-f": "Higher",
+        "E-f": "Lower"
+    }
+
+    const formulaDiv = document.getElementById(`formulas-${statAbbrv}`);
+    let formula;
+    if (formulaDiv) {
+        formula = formulaDiv.innerHTML;
+    } else {
+        formula = "";
+    }
+
+    const html = 
+        `<h4>${statAbbrv}:</h4>
+        <p class="stat-tooltip-p">${summaries[`${statAbbrv}-${type}`]}
+        <p>${formula}</p>
+        <p class="stat-tooltip-p">${better[`${statAbbrv}-${type}`]} is better.`;
+
+    return html
+}
+
+function addRow(table, game, statAbbrv, statRequestName, awayStats, homeStats, lower, higher, type) {
+    const row = document.createElement("tr");
+
+    const tooltipHtml = getTooltipHtml(statAbbrv, type);
+
+    const statCell = document.createElement("td");
+    statCell.className = "stat-label"
+    statCell.innerHTML = `${statAbbrv} <div class="stat-tooltip hidden">${tooltipHtml}</div>`;
+    statCell.onclick = e => {
+        console.log(e.target["childNodes"][1].classList.toggle("hidden"));
+    }
+
+    const awayCell = document.createElement("td");
+    awayCell.id = `${statAbbrv}-${game}-a`;
+    awayCell.className = "stat-row";
+    awayCell.innerText = awayStats[statRequestName];
+
+    const homeCell = document.createElement("td");
+    homeCell.id = `${statAbbrv}-${game}-h`;
+    homeCell.className = "stat-row";
+    homeCell.innerText = homeStats[statRequestName];
+
+    row.appendChild(statCell);
+    row.appendChild(awayCell);
+    row.appendChild(homeCell);
+    table.appendChild(row);
 
     if (awayStats[statRequestName] > homeStats[statRequestName]) {
-        awayRow.className = higher;
-        homeRow.className = lower;
+        awayCell.classList.add(higher);
+        homeCell.classList.add(lower);
     } else if (awayStats[statRequestName] < homeStats[statRequestName]) {
-        awayRow.className = lower;
-        homeRow.className = higher;
+        awayCell.classList.add(lower);
+        homeCell.classList.add(higher);
     }
 }
 
@@ -173,146 +273,288 @@ async function getPitching(teamId) {
     return data["stats"][0]["splits"][0]["stat"];
 }
 
+async function getFielding(teamId) {
+    const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/stats?season=2024&stats=season&group=fielding&sportIds=1`);
+    const data = await res.json();
+
+    return data["stats"][0]["splits"][0]["stat"];
+}
+
 async function addGame(game) {
     const away = game["teams"]["away"];
     const home = game["teams"]["home"];
 
     const gameDiv = document.createElement("div");
-    gameDiv.className = "game";
+    gameDiv.className = "game-panel";
     gameDiv.id = game["gamePk"];
 
-    const teamDiv = document.createElement("div");
-    teamDiv.className = "game-teams";
-    gameDiv.appendChild(teamDiv);
+    const gameDivLeft = document.createElement("div");
+    gameDivLeft.className = "gp-left"
 
-    // Away
-    const awayDiv = document.createElement("div");
-    awayDiv.className = "game-team";
+    // Away logo
+    const awayLogoDiv = document.createElement("div");
+    awayLogoDiv.className = "gp-logo-name";
 
     const awayLogo = document.createElement("img");
-    awayLogo.className = "logo"
     awayLogo.src = teamLogos[away["team"]["name"]];
-    awayDiv.appendChild(awayLogo);
+    awayLogo.className = "gp-logo";
+    awayLogoDiv.appendChild(awayLogo);
 
-    const awayName = document.createElement("h2")
-    awayName.innerText = away["team"]["name"];
-    awayDiv.appendChild(awayName);
+    const awayName = document.createElement("h2");
+    awayName.innerHTML = `${away["team"]["name"]} <br><span class="record">(${away["leagueRecord"]["wins"]}, ${away["leagueRecord"]["losses"]})</span>`;
+    awayLogoDiv.appendChild(awayName);
 
-    const awayRecord = document.createElement("p");
-    awayRecord.className = "record";
-    awayRecord.innerText = `(${away["leagueRecord"]["wins"]}, ${away["leagueRecord"]["losses"]})`;
-    awayDiv.appendChild(awayRecord);
-
-    teamDiv.appendChild(awayDiv);
+    gameDivLeft.appendChild(awayLogoDiv);
 
     // @
-    const atDiv = document.createElement("div");
-    atDiv.className = "at-div";
-    atDiv.innerText = "@";
-    teamDiv.appendChild(atDiv);
-    
-    // Home    
-    const homeDiv = document.createElement("div");
-    homeDiv.className = "game-team";
+    const at  = document.createElement("p");
+    at.innerText = "@";
+    at.className = "gp-at";
+    gameDivLeft.appendChild(at);
+
+    // Home logo
+    const homeLogoDiv = document.createElement("div");
+    homeLogoDiv.className = "gp-logo-name";
 
     const homeLogo = document.createElement("img");
-    homeLogo.className = "logo";
     homeLogo.src = teamLogos[home["team"]["name"]];
-    homeDiv.appendChild(homeLogo);
+    homeLogo.className = "gp-logo";
+    homeLogoDiv.appendChild(homeLogo);
 
-    const homeName = document.createElement("h2")
-    homeName.innerText = home["team"]["name"];
-    homeDiv.appendChild(homeName);
-    
-    const homeRecord = document.createElement("p");
-    homeRecord.className = "record";
-    homeRecord.innerText = `(${home["leagueRecord"]["wins"]}, ${home["leagueRecord"]["losses"]})`;
-    homeDiv.appendChild(homeRecord);
-    teamDiv.appendChild(homeDiv);
+    const homeName = document.createElement("h2");
+    homeName.innerHTML = `${home["team"]["name"]} <br><span class="record">(${home["leagueRecord"]["wins"]}, ${away["leagueRecord"]["losses"]})</span>`;
+    homeLogoDiv.appendChild(homeName);
 
-    // Stats
-    const stats = document.createElement("div");
-    stats.id = "s-" + game["gamePk"];
-    stats.className = "stats hidden";
+    gameDivLeft.appendChild(homeLogoDiv);
+ 
+    gameDiv.appendChild(gameDivLeft);
 
-    const awayStats = document.createElement("div");
-    awayStats.id = "sa-" + game["gamePk"];
-    awayStats.className = "stats-team"
-    stats.appendChild(awayStats);
-
-    const homeStats = document.createElement("div");
-    homeStats.id = "sh-" + game["gamePk"];
-    homeStats.className = "stats-team"
-    stats.appendChild(homeStats);
+    const gameDivRight = document.createElement("div");
+    gameDivRight.className = "gp-right";
 
     // Hitting
-    const awayHittingLabel = document.createElement("h3");
-    awayHittingLabel.innerText = "Hitting";
-    awayStats.appendChild(awayHittingLabel);
-    
-    const homeHittingLabel = document.createElement("h3");
-    homeHittingLabel.innerText = "Hitting";
-    homeStats.appendChild(homeHittingLabel);
-
     const awayHitting = await getHitting(away["team"]["id"]);
     const homeHitting = await getHitting(home["team"]["id"]);
 
-    const awayHittingTable = document.createElement("table");
-    awayHittingTable.className = "stat-table";
-    const homeHittingTable = document.createElement("table");
-    homeHittingTable.className = "stat-table";
+    const hittingDiv = document.createElement("div");
+    hittingDiv.className = "gp-stat";
 
-    addRow(awayHittingTable, homeHittingTable, "AVG", "avg", awayHitting, homeHitting, "worse", "better");
-    addRow(awayHittingTable, homeHittingTable, "OBP", "obp", awayHitting, homeHitting, "worse", "better");
-    addRow(awayHittingTable, homeHittingTable, "SLG", "slg", awayHitting, homeHitting, "worse", "better");
-    addRow(awayHittingTable, homeHittingTable, "OPS", "ops", awayHitting, homeHitting, "worse", "better");
-    addRow(awayHittingTable, homeHittingTable, "R", "runs", awayHitting, homeHitting, "worse", "better");
-    addRow(awayHittingTable, homeHittingTable, "HR", "homeRuns", awayHitting, homeHitting, "worse", "better");
-    addRow(awayHittingTable, homeHittingTable, "BB", "baseOnBalls", awayHitting, homeHitting, "worse", "better");
-    addRow(awayHittingTable, homeHittingTable, "RBI", "rbi", awayHitting, homeHitting, "worse", "better");
+    const hittingLabel = document.createElement("h3");
+    hittingLabel.innerText = "Hitting";
+    hittingLabel.className = "mb-1";
+    hittingDiv.appendChild(hittingLabel);
 
-    awayStats.appendChild(awayHittingTable);
-    homeStats.appendChild(homeHittingTable);
+    const hittingTable = document.createElement("table");
+    hittingTable.className = "stat-table";
+
+    const hittingTeams = document.createElement("tr");
+    hittingTeams.className = "stat-table-top";
+    hittingTeams.innerHTML = `<td></td><td>${teamAbbrvs[away["team"]["name"]]}</td><td>${teamAbbrvs[home["team"]["name"]]}</td>`;
+    hittingTable.appendChild(hittingTeams);
+
+    addRow(hittingTable, game["gamePk"], "AVG", "avg", awayHitting, homeHitting, "worse", "better", "h");
+    addRow(hittingTable, game["gamePk"], "OBP", "obp", awayHitting, homeHitting, "worse", "better", "h");
+    addRow(hittingTable, game["gamePk"], "SLG", "slg", awayHitting, homeHitting, "worse", "better", "h");
+    addRow(hittingTable, game["gamePk"], "OPS", "ops", awayHitting, homeHitting, "worse", "better", "h");
+    addRow(hittingTable, game["gamePk"], "R", "runs", awayHitting, homeHitting, "worse", "better", "h");
+
+    hittingDiv.appendChild(hittingTable);
+    gameDivRight.appendChild(hittingDiv);
 
     // Pitching
-    const awayPitchingLabel = document.createElement("h3");
-    awayPitchingLabel.innerText = "Pitching";
-    awayStats.appendChild(awayPitchingLabel);
-
-    const homePitchingLabel = document.createElement("h3");
-    homePitchingLabel.innerText = "Pitching";
-    homeStats.appendChild(homePitchingLabel);
-
     const awayPitching = await getPitching(away["team"]["id"]);
     const homePitching = await getPitching(home["team"]["id"]);
 
-    const awayPitchingTable = document.createElement("table");
-    awayPitchingTable.className = "stat-table";
-    const homePitchingTable = document.createElement("table");
-    homePitchingTable.className = "stat-table";
+    const pitchingDiv = document.createElement("div");
+    pitchingDiv.className = "gp-stat";
 
-    addRow(awayPitchingTable, homePitchingTable, "AVG", "avg", awayPitching, homePitching, "better", "worse");
-    addRow(awayPitchingTable, homePitchingTable, "OBP", "obp", awayPitching, homePitching, "better", "worse");
-    addRow(awayPitchingTable, homePitchingTable, "SLG", "slg", awayPitching, homePitching, "better", "worse");
-    addRow(awayPitchingTable, homePitchingTable, "OPS", "ops", awayPitching, homePitching, "better", "worse");
-    addRow(awayPitchingTable, homePitchingTable, "ERA", "era", awayPitching, homePitching, "better", "worse");
-    addRow(awayPitchingTable, homePitchingTable, "R", "runs", awayPitching, homePitching, "better", "worse");
-    addRow(awayPitchingTable, homePitchingTable, "HR", "homeRuns", awayPitching, homePitching, "better", "worse");
-    addRow(awayPitchingTable, homePitchingTable, "AVG", "avg", awayPitching, homePitching, "better", "worse");
-    addRow(awayPitchingTable, homePitchingTable, "O", "outs", awayPitching, homePitching, "worse", "better");
-    addRow(awayPitchingTable, homePitchingTable, "SO", "strikeOuts", awayPitching, homePitching, "worse", "better");
-    addRow(awayPitchingTable, homePitchingTable, "SHO", "shutouts", awayPitching, homePitching, "worse", "better");
+    const pitchingLabel = document.createElement("h3");
+    pitchingLabel.innerText = "Pitching";
+    pitchingLabel.className = "mb-1";
+    pitchingDiv.appendChild(pitchingLabel);
 
-    awayStats.appendChild(awayPitchingTable);
-    homeStats.appendChild(homePitchingTable);
+    const pitchingTable = document.createElement("table");
+    pitchingTable.className = "stat-table";
 
-    gameDiv.appendChild(stats);
+    const pitchingTeams = document.createElement("tr");
+    pitchingTeams.className = "stat-table-top";
+    pitchingTeams.innerHTML = `<td></td><td>${teamAbbrvs[away["team"]["name"]]}</td><td>${teamAbbrvs[home["team"]["name"]]}</td>`;
+    pitchingTable.appendChild(pitchingTeams);
 
-    teamDiv.addEventListener("click", e => {
-        stats.classList.toggle("hidden");
-    });
+    addRow(pitchingTable, game["gamePk"], "AVG", "avg", awayPitching, homePitching, "better", "worse", "p");
+    addRow(pitchingTable, game["gamePk"], "OBP", "obp", awayPitching, homePitching, "better", "worse", "p");
+    addRow(pitchingTable, game["gamePk"], "SLG", "slg", awayPitching, homePitching, "better", "worse", "p");
+    addRow(pitchingTable, game["gamePk"], "OPS", "ops", awayPitching, homePitching, "better", "worse", "p");
+    addRow(pitchingTable, game["gamePk"], "ERA", "era", awayPitching, homePitching, "better", "worse", "p");
 
-    gamesGrid.appendChild(gameDiv);
+    pitchingDiv.appendChild(pitchingTable);
+    gameDivRight.appendChild(pitchingDiv);
+
+    // Fielding
+    const awayFielding = await getFielding(away["team"]["id"]);
+    const homeFielding = await getFielding(home["team"]["id"]);
+
+    const fieldingDiv = document.createElement("div");
+    fieldingDiv.className = "gp-stat";
+
+    const fieldingLabel = document.createElement("h3");
+    fieldingLabel.innerText = "Fielding";
+    fieldingLabel.className = "mb-1";
+    fieldingDiv.appendChild(fieldingLabel);
+
+    const fieldingTable = document.createElement("table");
+    fieldingTable.className = "stat-table";
+
+    const fieldingTeams = document.createElement("tr");
+    fieldingTeams.className = "stat-table-top";
+    fieldingTeams.innerHTML = `<td></td><td>${teamAbbrvs[away["team"]["name"]]}</td><td>${teamAbbrvs[home["team"]["name"]]}</td>`;
+    fieldingTable.appendChild(fieldingTeams);
+
+    addRow(fieldingTable, game["gamePk"], "FPCT", "fielding", awayFielding, homeFielding, "worse", "better", "f");
+    addRow(fieldingTable, game["gamePk"], "E", "errors", awayFielding, homeFielding, "better", "worse", "f");
+
+    fieldingDiv.appendChild(fieldingTable);
+    gameDivRight.appendChild(fieldingDiv);
+
+    gameDiv.appendChild(gameDivRight);
+    gamesDiv.appendChild(gameDiv);
+
+    // const gameDiv = document.createElement("div");
+    // gameDiv.className = "game";
+    // gameDiv.id = game["gamePk"];
+
+    // const teamDiv = document.createElement("div");
+    // teamDiv.className = "game-teams";
+    // gameDiv.appendChild(teamDiv);
+
+    // // Away
+    // const awayDiv = document.createElement("div");
+    // awayDiv.className = "game-team";
+
+    // const awayLogo = document.createElement("img");
+    // awayLogo.className = "logo"
+    // awayLogo.src = teamLogos[away["team"]["name"]];
+    // awayDiv.appendChild(awayLogo);
+
+    // const awayName = document.createElement("h2")
+    // awayName.innerText = away["team"]["name"];
+    // awayDiv.appendChild(awayName);
+
+    // const awayRecord = document.createElement("p");
+    // awayRecord.className = "record";
+    // awayRecord.innerText = `(${away["leagueRecord"]["wins"]}, ${away["leagueRecord"]["losses"]})`;
+    // awayDiv.appendChild(awayRecord);
+
+    // teamDiv.appendChild(awayDiv);
+
+    // // @
+    // const atDiv = document.createElement("div");
+    // atDiv.className = "at-div";
+    // atDiv.innerText = "@";
+    // teamDiv.appendChild(atDiv);
+    
+    // // Home    
+    // const homeDiv = document.createElement("div");
+    // homeDiv.className = "game-team";
+
+    // const homeLogo = document.createElement("img");
+    // homeLogo.className = "logo";
+    // homeLogo.src = teamLogos[home["team"]["name"]];
+    // homeDiv.appendChild(homeLogo);
+
+    // const homeName = document.createElement("h2")
+    // homeName.innerText = home["team"]["name"];
+    // homeDiv.appendChild(homeName);
+    
+    // const homeRecord = document.createElement("p");
+    // homeRecord.className = "record";
+    // homeRecord.innerText = `(${home["leagueRecord"]["wins"]}, ${home["leagueRecord"]["losses"]})`;
+    // homeDiv.appendChild(homeRecord);
+    // teamDiv.appendChild(homeDiv);
+
+    // // Stats
+    // const stats = document.createElement("div");
+    // stats.id = "s-" + game["gamePk"];
+    // stats.className = "stats hidden";
+
+    // const awayStats = document.createElement("div");
+    // awayStats.id = "sa-" + game["gamePk"];
+    // awayStats.className = "stats-team"
+    // stats.appendChild(awayStats);
+
+    // const homeStats = document.createElement("div");
+    // homeStats.id = "sh-" + game["gamePk"];
+    // homeStats.className = "stats-team"
+    // stats.appendChild(homeStats);
+
+    // // Hitting
+    // const awayHittingLabel = document.createElement("h3");
+    // awayHittingLabel.innerText = "Hitting";
+    // awayStats.appendChild(awayHittingLabel);
+    
+    // const homeHittingLabel = document.createElement("h3");
+    // homeHittingLabel.innerText = "Hitting";
+    // homeStats.appendChild(homeHittingLabel);
+
+    // const awayHitting = await getHitting(away["team"]["id"]);
+    // const homeHitting = await getHitting(home["team"]["id"]);
+
+    // const awayHittingTable = document.createElement("table");
+    // awayHittingTable.className = "stat-table";
+    // const homeHittingTable = document.createElement("table");
+    // homeHittingTable.className = "stat-table";
+
+    // addRow(awayHittingTable, homeHittingTable, "AVG", "avg", awayHitting, homeHitting, "worse", "better");
+    // addRow(awayHittingTable, homeHittingTable, "OBP", "obp", awayHitting, homeHitting, "worse", "better");
+    // addRow(awayHittingTable, homeHittingTable, "SLG", "slg", awayHitting, homeHitting, "worse", "better");
+    // addRow(awayHittingTable, homeHittingTable, "OPS", "ops", awayHitting, homeHitting, "worse", "better");
+    // addRow(awayHittingTable, homeHittingTable, "R", "runs", awayHitting, homeHitting, "worse", "better");
+    // addRow(awayHittingTable, homeHittingTable, "HR", "homeRuns", awayHitting, homeHitting, "worse", "better");
+    // addRow(awayHittingTable, homeHittingTable, "BB", "baseOnBalls", awayHitting, homeHitting, "worse", "better");
+    // addRow(awayHittingTable, homeHittingTable, "RBI", "rbi", awayHitting, homeHitting, "worse", "better");
+
+    // awayStats.appendChild(awayHittingTable);
+    // homeStats.appendChild(homeHittingTable);
+
+    // // Pitching
+    // const awayPitchingLabel = document.createElement("h3");
+    // awayPitchingLabel.innerText = "Pitching";
+    // awayStats.appendChild(awayPitchingLabel);
+
+    // const homePitchingLabel = document.createElement("h3");
+    // homePitchingLabel.innerText = "Pitching";
+    // homeStats.appendChild(homePitchingLabel);
+
+    // const awayPitching = await getPitching(away["team"]["id"]);
+    // const homePitching = await getPitching(home["team"]["id"]);
+
+    // const awayPitchingTable = document.createElement("table");
+    // awayPitchingTable.className = "stat-table";
+    // const homePitchingTable = document.createElement("table");
+    // homePitchingTable.className = "stat-table";
+
+    // addRow(awayPitchingTable, homePitchingTable, "AVG", "avg", awayPitching, homePitching, "better", "worse");
+    // addRow(awayPitchingTable, homePitchingTable, "OBP", "obp", awayPitching, homePitching, "better", "worse");
+    // addRow(awayPitchingTable, homePitchingTable, "SLG", "slg", awayPitching, homePitching, "better", "worse");
+    // addRow(awayPitchingTable, homePitchingTable, "OPS", "ops", awayPitching, homePitching, "better", "worse");
+    // addRow(awayPitchingTable, homePitchingTable, "ERA", "era", awayPitching, homePitching, "better", "worse");
+    // addRow(awayPitchingTable, homePitchingTable, "R", "runs", awayPitching, homePitching, "better", "worse");
+    // addRow(awayPitchingTable, homePitchingTable, "HR", "homeRuns", awayPitching, homePitching, "better", "worse");
+    // addRow(awayPitchingTable, homePitchingTable, "AVG", "avg", awayPitching, homePitching, "better", "worse");
+    // addRow(awayPitchingTable, homePitchingTable, "O", "outs", awayPitching, homePitching, "worse", "better");
+    // addRow(awayPitchingTable, homePitchingTable, "SO", "strikeOuts", awayPitching, homePitching, "worse", "better");
+    // addRow(awayPitchingTable, homePitchingTable, "SHO", "shutouts", awayPitching, homePitching, "worse", "better");
+
+    // awayStats.appendChild(awayPitchingTable);
+    // homeStats.appendChild(homePitchingTable);
+
+    // gameDiv.appendChild(stats);
+
+    // teamDiv.addEventListener("click", e => {
+    //     stats.classList.toggle("hidden");
+    // });
+
+    // gamesGrid.appendChild(gameDiv);
 }
 
 async function setGames() {

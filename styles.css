@@ -1,14 +1,14 @@
 :root {
     --white: #f4f6f6;
     --grey:#d5d8dc;
-    --dark-grey: #566573;
+    --dark-grey: #808b96 ;
     --black: #17202a;
 
     --green-tint: rgb(88, 214, 141, 0.4);
     --red-tint: rgb(236, 112, 99, 0.4);
 }
 
-p, h1, h3 {
+p, h1, h3, h4 {
     margin: 0;
 }
 
@@ -39,7 +39,8 @@ body {
     /* border: 4px solid var(--grey);
     border-radius: 5px; */
     padding: 1rem 0;
-    display: flex;
+    /* display: flex; */
+    display: none;
     flex-wrap: wrap;
     column-gap: 10px;
     gap: 10px;
@@ -47,7 +48,7 @@ body {
 
 .game {
     border: 5px solid var(--grey);
-    border-radius: 4px;
+    border-radius: 5px;
     background-color: var(--grey);
     flex: 45%;
     height: fit-content;
@@ -108,14 +109,102 @@ body {
 }
 
 .stat-table td {
-    padding: 0.5rem 1rem;
+    padding: 0.7rem 1rem;
     border: 2px solid var(--grey);
 }
 
-.better td {
+.stat-table-top td {
+    border: none;
+    color: var(--dark-grey);
+}
+
+.stat-label {
+    border: none !important;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.better {
     background-color: var(--green-tint);
 }
 
-.worse td {
+.worse {
     background-color: var(--red-tint);
+}
+
+.game-panel {
+    border: 5px solid var(--grey);
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+}
+
+.game-panel:not(:last-child) {
+    margin-bottom: 1rem;
+}
+
+.gp-left {
+    background-color: var(--grey);
+    padding: 2rem;
+    width: 20%;
+}
+
+.gp-logo-name {
+    display: flex;
+    align-items: center;
+}
+
+.gp-logo-name h2 {
+    margin-left: 2rem;
+}
+
+.gp-logo {
+    height: 55px;
+}
+
+.gp-at {
+    padding: 2rem 0;
+    text-align: center;
+    font-size: 18px;
+}
+
+.gp-right {
+    display: flex;
+    flex-direction: row;
+}
+
+.gp-stat {
+    padding: 2rem;
+}
+
+.record {
+    color: var(--dark-grey);
+    text-align: center;
+    font-size: 16px;
+    font-weight: 100;
+}
+
+.stat-tooltip {
+    position: absolute;
+    transform: translate(-20px, 10px);
+    background-color: var(--white);
+    border: 5px solid var(--grey);
+    border-radius: 5px;
+    font-weight: normal;
+    padding: 1.5rem;
+    cursor: default;
+}
+
+.stat-tooltip .stat-tooltip-p {
+    max-width: 500px;
+}
+
+.stat-tooltip h4 {
+    margin-bottom: 1rem;
+}
+
+.stat-tooltip .katex-display {
+    font-size: 24px;
+    margin: 2.5rem 0 !important;
+    pointer-events: none;
 }
